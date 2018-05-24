@@ -3538,6 +3538,310 @@ app.get('/api/others', function (req, res) {
 	
 	//});
 });//datesort
+//showing user and loan details depends on id
+
+app.get('/mobile/table1/:cid', function (req, res) {
+	var cid = req.params.cid;
+	console.log(cid);
+
+	console.log("GET request :: /list/" + cid);
+	
+		connection.query('SELECT registration.cid, loandetail.loan_id, loan_amount, address, noofinstallement, interest, dayDifference, startdate, receivedamt, fullname, mobile FROM registration JOIN  loandetail ON registration.cid = loandetail.cid WHERE registration.cid  = ?', [cid],function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+//showing user and loan details depends on loan id
+app.get('/mobile/installid/:loan_id', function (req, res) {
+	var loan_id = req.params.loan_id;
+
+	
+		connection.query('SELECT   installement.mydate, installement.installement_id, installement.loan_id, installement.installement_amount  FROM loandetail JOIN installement  ON   loandetail.loan_id = installement.loan_id  WHERE loandetail.loan_id  = ?', [loan_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+
+app.get('/mobile/tables/:loan_id', function (req, res) {
+	var loan_id = req.params.loan_id;
+		connection.query('SELECT   installement.mydate, installement.installement_id, loandetail.loan_id, installement.installement_amount  FROM loandetail JOIN installement  ON   loandetail.loan_id = installement.loan_id  WHERE loandetail.loan_id  = ?', [loan_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+//delete install
+app.post('/mobile/delete/:installement_id', function (req, res) {
+	var  installement_id = req.params.installement_id;
+		connection.query('DELETE FROM installement WHERE  installement_id = ?',  [installement_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+//LIST Product by ID
+app.get('/mobile/installementloan/:installement_id', function (req, res) {
+	var loan_id = req.params.loan_id;
+		connection.query('SELECT   mydate, installement_id,  loandetail.installement_amount  FROM loandetail JOIN installement  ON   loandetail.loan_id = installement.loan_id  WHERE installement.installement_id  = ?', [installement_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+//update new product
+app.post('/mobile/update', function (req, res) {
+  var installement_id = req.body.installement_id;
+	
+    var mydate = req.body.mydate;
+	console.log(mydate);
+    var installement_amount = req.body.installement_amount;
+	console.log(installement_amount);
+    var loan_id = req.body.loan_id;
+
+  connection.query('SELECT * FROM installement WHERE installement_id = ?',[installement_id], function (error, results, fields) {
+	 
+   if(results.length >0){
+	    console.log('error3');
+      if(results[0].installement_amount == installement_amount){
+		  console.log('error1');
+		  console.log(installement_amount);
+     connection.query("DELETE FROM installement WHERE installement_id = ? ",[installement_id], function (err, rows, fields) {
+				  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+      }
+      else{
+        connection.query("UPDATE installement SET mydate = ?, installement_amount = installement_amount - ?, loan_id = ? WHERE installement_id = ?; INSERT INTO  transactionmodel SET mydate =?, installement_amount = ?, loan_id =?; ",[mydate,  installement_amount, loan_id, installement_id, mydate,  installement_amount, loan_id], function (err, rows, fields) {
+				if (rows.length !== 0 && !err) {
+				connection.query('SELECT   installement.mydate, installement.installement_id, installement.loan_id, installement.installement_amount  FROM loandetail JOIN installement  ON   loandetail.loan_id = installement.loan_id  WHERE loandetail.loan_id  = ?; ', [loan_id], function (error, results, fields) {
+			//connection.release();
+				  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+			} else if (rows.length === 0) {
+				//Error code 2 = no rows in db.
+				
+				res.json(data);
+			} else {
+				
+				res.json(data);
+				console.log('Error while performing Query: ' + err);
+				//log.error('Error while performing Query: ' + err);
+			}
+			});
+      }
+    }else{
+   
+    
+  }
+  });
+});
+app.post('/mobile/transaction/', function (req, res) {
+	var loan_id = req.body.loan_id;
+
+	
+		connection.query('SELECT * FROM  transactionmodel  WHERE loan_id = ? ORDER BY  transaction_id DESC',[loan_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+//loan detail sum
+app.post('/mobile/loandetailsum/', function (req, res) {
+	var loan_id = req.body.loan_id;
+	
+	
+		connection.query('SELECT * FROM  transactionmodel  WHERE loan_id = ? ORDER BY  transaction_id DESC; UPDATE loandetail INNER JOIN transactionmodel ON loandetail.loan_id = transactionmodel.loan_id  SET loandetail.receivedamt =( SELECT sum(installement_amount) FROM transactionmodel) WHERE transactionmodel.loan_id = ?',[loan_id, loan_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+app.get('/mobile/transactionmodel/', function (req, res) {
+		connection.query('SELECT * FROM  transactionmodel ORDER BY  transaction_id DESC LIMIT 5;', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+//upcoming istallements
+app.post('/mobile/updatemy', function (req, res) {
+  var installement_id = req.body.installement_id;
+	
+    var mydate = req.body.mydate;
+	console.log(mydate);
+    var installement_amount = req.body.installement_amount;
+	console.log(installement_amount);
+    var loan_id = req.body.loan_id;
+
+  
+        connection.query("UPDATE installement SET mydate = ?, installement_amount = ?, loan_id = ? WHERE installement_id = ?; INSERT INTO  transactionmodel SET mydate =?, installement_amount = ?, loan_id =?; ",[mydate,  installement_amount, loan_id, installement_id, mydate,  installement_amount, loan_id], function (err, rows, fields) {
+				if (rows.length !== 0 && !err) {
+				connection.query('SELECT * FROM installement ORDER BY installement_id DESC ', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+
+				}
+		});			
+
+});
+app.get('/mobile/registeruser', function (req, res) {
+
+   connection.query('SELECT  * from registration WHERE cid = LAST_INSERT_ID();',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+
+});
+//registration user
+
+app.get('/mobile/registerusers', function (req, res) {
+
+   connection.query('SELECT  * FROM registration ORDER BY cid DESC LIMIT 1;',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+
+});
+
+//LOAN ID Password
+app.get('/mobile/loanuser', function (req, res) {
+
+   connection.query('SELECT  * FROM loandetail ORDER BY cid DESC LIMIT 1;',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+
+});
+app.get('/mobile/installementloan/:installement_id', function (req, res) {
+	var loan_id = req.params.loan_id;
+	
+	
+		connection.query('SELECT   mydate, installement_id,  loandetail.installement_amount  FROM loandetail JOIN installement  ON   loandetail.loan_id = installement.loan_id  WHERE installement.installement_id  = ?', [installement_id], function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+app.get('/mobile/newuser', function (req, res) {
+
+   connection.query('SELECT * FROM installement ORDER BY installement_id DESC;',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+
+app.get('/mobile/notification', function (req, res) {
+	var data = {
+        "error": 1,
+        "report": ""
+    };
+   connection.query('SELECT count(comment_status) as cid FROM registration where comment_status = 0;SELECT * FROM registration ORDER BY cid DESC LIMIT 5;',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+
+app.get('/mobile/updatenote', function (req, res) {
+	var data = {
+        "error": 1,
+        "report": ""
+    };
+   connection.query('UPDATE registration SET comment_status = 1 WHERE comment_status = 0',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+//expenses
+app.get('/mobile/expendituressum', function (req, res) {
+	
+	
+		connection.query('SELECT sum(Room_Rent) as Room_Rent ,sum(Light_Bill) as Light_Bill,sum(Mobile_Bill) as Mobile_Bill , sum(Payment) as Payment,sum(Petrol) as Petrol,sum(Others) as Others from expenditure ',function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+});
+app.post('/mobile/expend', function (req, res) {
+    var Room_Rent = req.body.Room_Rent;
+    var Light_Bill = req.body.Light_Bill;
+    var Mobile_Bill = req.body.Mobile_Bill;
+	  var Payment = req.body.Payment;
+	var  Petrol = req.body.Petrol;
+	var	Others = req.body.Others;
+	var	date = req.body.date;
+	console.log(Room_Rent);
+   
+		
+			connection.query("INSERT INTO expenditure SET Room_Rent = ?, Light_Bill = ?, Mobile_Bill = ?, Payment = ?, Petrol = ?,  Others = ?, date = ?",[Room_Rent, Light_Bill, Mobile_Bill, Payment,  Petrol, Others, date], function (error, results, fields) {
+      if (error) {
+        res.json({
+            status:false,
+            message:'there are some error with query'
+        })
+      }else{
+    console.log('The solution is: ', results);
+    res.send({
+      "code":200,
+      "success":"loanuser registered sucessfully"
+        });
+  }
+});
+});
+
+app.get('/mobile/roomrent', function (req, res) {
+
+		connection.query('SELECT sum(Room_Rent) as Room_Rents FROM expenditure;SELECT Room_Rent,date FROM expenditure', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+
+app.get('/mobile/light_bill', function (req, res) {
+
+		connection.query('SELECT sum(Light_Bill) as Light_Bills FROM expenditure;SELECT Light_Bill,date from expenditure', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+app.get('/mobile/mobile_bill', function (req, res) {
+
+		connection.query('SELECT sum(Mobile_Bill) as Mobile_Bills FROM expenditure;SELECT Mobile_Bill,date from expenditure', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+app.get('/mobile/payment', function (req, res) {
+	console.log("GET Request :: /payment");
+
+		connection.query('SELECT sum(Payment) as Payments FROM expenditure;SELECT Payment,date from expenditure', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+app.get('/mobile/petrol', function (req, res) {
+	console.log("GET Request :: /petrol");
+
+		connection.query('SELECT sum(Petrol) as Petrols FROM expenditure;SELECT Petrol,date from expenditure', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
+app.get('/mobile/others', function (req, res) {
+	console.log("GET Request :: /others");
+	
+		connection.query('SELECT sum(Others) as Otherss FROM expenditure;SELECT Others,date from expenditure', function (error, results, fields) {
+	  if (error) throw error;
+	  res.end(JSON.stringify(results));
+	});
+
+});
 var server = app.listen(3009, function () {
 
   var host = server.address().address;
