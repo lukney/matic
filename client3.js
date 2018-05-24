@@ -8,10 +8,10 @@ var bodyParser = require("body-parser");
 //const MSG91 = require("./MSG91");
 var connection = mysql.createConnection({
 	//connectionLimit : 25,
-	host     : 'financematic.cyelmj7smxyj.us-east-1.rds.amazonaws.com',
-	user     : 'financematic',
-	password : 'financematic',
-	database : 'financematic',
+	host     : 'fresh.cyelmj7smxyj.us-east-1.rds.amazonaws.com',
+	user     : 'fresh',
+	password : 'freshfresh',
+	database : 'fresh',
 	port :'3306',
 	 debug: false,
         multipleStatements: true
