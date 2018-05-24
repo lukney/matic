@@ -8,10 +8,10 @@ var bodyParser = require("body-parser");
 //const MSG91 = require("./MSG91");
 var connection = mysql.createConnection({
 	//connectionLimit : 25,
-	host     : 'localhost',
-	user     : 'root',
-	password : '',
-	database : 'fresh',
+	host     : 'financematic.cyelmj7smxyj.us-east-1.rds.amazonaws.com',
+	user     : 'financematic',
+	password : 'financematic',
+	database : 'financematic',
 	port :'3306',
 	 debug: false,
         multipleStatements: true
@@ -3842,9 +3842,9 @@ app.get('/mobile/others', function (req, res) {
 	});
 
 });
-var server = app.listen(3009, function () {
+var server = app.listen(3306, function () {
 
-  var host = server.address().address;
+  var host = 'ec2-54-167-210-141.compute-1.amazonaws.com';
   var port = server.address().port;
 
   console.log("dummy app listening at: " + host + ":" + port);
